@@ -1,55 +1,48 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-    <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backoffice - Registros</title>
+    <title>Acceso Restringido - Backoffice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neonBlue: '#00d2ff',
-                        deepNavy: '#030b1e',
-                        cardNavy: '#0a1931',
-                        borderNavy: '#1b3a6b'
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        html, body { min-height: 100vh; background-color: #030b1e; font-family: system-ui, sans-serif; }
+        body { background-color: #030b1e; color: white; font-family: system-ui, sans-serif; }
         .neon-card { background: #0a1931; border: 1px solid #1b3a6b; box-shadow: 0 0 15px rgba(0, 210, 255, 0.1); }
+        .neon-input { background-color: #030b1e; border: 1px solid #1b3a6b; }
+        .neon-input:focus { outline: none; border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
     </style>
 </head>
-<body class="text-white p-4 sm:p-8">
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
 
-    <div class="max-w-6xl mx-auto">
-        <!-- Header Admin -->
+    <!-- LOGIN -->
+    <div id="loginScreen" class="neon-card p-8 rounded-2xl w-full max-w-sm text-center">
+        <div class="text-4xl mb-4 text-[#00d2ff]"><i class="fa-solid fa-lock"></i></div>
+        <h2 class="text-xl font-bold mb-2">Acceso Restringido</h2>
+        <p class="text-gray-400 text-sm mb-6">Ingresa la contraseña de administrador.</p>
+        <input type="password" id="passwordInput" placeholder="Contraseña" class="neon-input w-full rounded-xl px-4 py-3 text-white mb-4 text-center" onkeypress="if(event.key === 'Enter') verificarPassword()">
+        <button onclick="verificarPassword()" class="w-full bg-[#00d2ff] text-[#030b1e] font-bold py-3 rounded-xl hover:opacity-90 transition">Entrar</button>
+        <p id="errorMsg" class="text-red-500 text-xs mt-3 hidden">Contraseña incorrecta.</p>
+        <a href="index.html" class="block mt-4 text-xs text-gray-500 hover:text-white">Volver al inicio</a>
+    </div>
+
+    <!-- PANEL -->
+    <div id="adminPanel" class="hidden max-w-6xl w-full mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <i class="text-neonBlue">📊</i> Backoffice - Asistentes
-            </h1>
-            <button onclick="recargarDatos()" class="bg-neonBlue text-deepNavy px-4 py-2 rounded-lg font-bold text-sm">
-                Actualizar
-            </button>
+            <h1 class="text-xl font-bold flex items-center gap-2"><span class="text-[#00d2ff]">📊</span> Backoffice - Asistentes</h1>
+            <div class="flex gap-2">
+                <button onclick="cerrarSesion()" class="bg-gray-700 text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90">Cerrar Sesión</button>
+            </div>
         </div>
 
-        <!-- Buscador -->
         <div class="mb-4">
-            <input type="text" id="searchInput" onkeyup="filtrarTabla()" 
-                   placeholder="🔍 Buscar por nombre o DNI..." 
-                   class="w-full bg-deepNavy border border-borderNavy rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neonBlue">
+            <input type="text" id="searchInput" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por nombre o DNI..." class="w-full bg-[#030b1e] border border-[#1b3a6b] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#00d2ff]">
         </div>
 
-        <!-- Tabla de Datos (Responsive) -->
         <div class="neon-card rounded-xl overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-gray-300">
-                    <thead class="text-xs uppercase bg-deepNavy text-neonBlue border-b border-borderNavy">
+                    <thead class="text-xs uppercase bg-[#030b1e] text-[#00d2ff] border-b border-[#1b3a6b]">
                         <tr>
                             <th class="px-4 py-3">Fecha / Hora</th>
                             <th class="px-4 py-3">Nombre</th>
@@ -58,9 +51,7 @@
                         </tr>
                     </thead>
                     <tbody id="tablaBody">
-                        <tr>
-                            <td colspan="4" class="text-center py-6 text-gray-500">Cargando datos...</td>
-                        </tr>
+                        <tr><td colspan="4" class="text-center py-6 text-gray-500">Cargando datos desde la nube...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -68,28 +59,86 @@
         <div class="mt-2 text-right text-xs text-gray-500" id="totalRegistros"></div>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // La misma configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0iSjTHn0tYsqE92EGFz7O9Tnkb9qayJA",
+            authDomain: "evento-financiero-6439d.firebaseapp.com",
+            projectId: "evento-financiero-6439d",
+            storageBucket: "evento-financiero-6439d.firebasestorage.app",
+            messagingSenderId: "123911404603",
+            appId: "1:123911404603:web:24667ac5e4dbc0fea7701e",
+            measurementId: "G-0Q8KYLPCPF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const CONTRASENAS_PERMITIDAS = ["admin123", "evento2024"]; 
         let asistentesGlobal = [];
 
-        // Cargar datos desde Apps Script
-        function cargarDatos() {
-            document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500">Cargando datos...</td></tr>';
-            
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    asistentesGlobal = data;
-                    renderTabla(data);
-                })
-                .withFailureHandler(function(error) {
-                    document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500">Error al cargar datos.</td></tr>';
-                })
-                .obtenerAsistentes();
+        window.onload = function() {
+            if (sessionStorage.getItem('adminLogueado') === 'true') {
+                mostrarAdmin();
+            }
+        };
+
+        window.verificarPassword = function() {
+            const pass = document.getElementById('passwordInput').value;
+            if (CONTRASENAS_PERMITIDAS.includes(pass)) {
+                sessionStorage.setItem('adminLogueado', 'true');
+                mostrarAdmin();
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+            }
+        };
+
+        window.cerrarSesion = function() {
+            sessionStorage.removeItem('adminLogueado');
+            location.reload();
+        };
+
+        async function mostrarAdmin() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            await cargarDatos();
+        }
+
+        async function cargarDatos() {
+            try {
+                // Ordenamos por fecha descendente (los más nuevos primero)
+                const q = query(collection(db, "asistentes"), orderBy("fecha", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                asistentesGlobal = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let fechaStr = 'Reciente';
+                    if(data.fecha) {
+                        fechaStr = data.fecha.toDate().toLocaleString();
+                    }
+                    asistentesGlobal.push({
+                        fecha: fechaStr,
+                        nombre: data.nombre,
+                        dni: data.dni,
+                        celular: data.celular
+                    });
+                });
+                renderTabla(asistentesGlobal);
+            } catch (error) {
+                console.error("Error al cargar: ", error);
+                document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500">Error al conectar con la base de datos. Revisa las reglas de Firestore.</td></tr>';
+            }
         }
 
         function renderTabla(data) {
             const tbody = document.getElementById('tablaBody');
             tbody.innerHTML = '';
-            
             document.getElementById('totalRegistros').innerText = `Total registrados: ${data.length}`;
 
             if (data.length === 0) {
@@ -99,7 +148,7 @@
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-borderNavy hover:bg-white/5 transition';
+                tr.className = 'border-b border-[#1b3a6b] hover:bg-white/5 transition';
                 tr.innerHTML = `
                     <td class="px-4 py-3 text-xs text-gray-400">${row.fecha}</td>
                     <td class="px-4 py-3 font-semibold text-white">${row.nombre}</td>
@@ -110,22 +159,13 @@
             });
         }
 
-        // Filtro de búsqueda
-        function filtrarTabla() {
+        window.filtrarTabla = function() {
             const filtro = document.getElementById('searchInput').value.toLowerCase();
             const filtrados = asistentesGlobal.filter(row => 
-                row.nombre.toLowerCase().includes(filtro) || 
-                row.dni.includes(filtro)
+                row.nombre.toLowerCase().includes(filtro) || row.dni.includes(filtro)
             );
             renderTabla(filtrados);
         }
-
-        function recargarDatos() {
-            cargarDatos();
-        }
-
-        // Iniciar
-        cargarDatos();
     </script>
 </body>
 </html>
