@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <base target="_top"> <!-- VITAL PARA APPS SCRIPT -->
+    <meta charset="UTF-8">
+    <title>Evolución Financiera - Registro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neonBlue: '#00d2ff',
+                        deepNavy: '#030b1e',
+                        cardNavy: '#0a1931',
+                        borderNavy: '#1b3a6b'
+                    },
+                    boxShadow: { 'neon': '0 0 25px rgba(0, 210, 255, 0.3)' }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Forzamos a que el HTML y el Body ocupen todo el alto disponible */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #030b1e; /* Mismo color que deepNavy */
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            /* Usamos flex para que el footer se pegue abajo, pero SIN centrar el contenido verticalmente */
+            display: flex;
+            flex-direction: column;
+        }
+        .neon-card {
+            background: linear-gradient(145deg, rgba(10, 25, 49, 0.9), rgba(3, 11, 30, 0.95));
+            border: 1px solid rgba(0, 210, 255, 0.25);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.15), inset 0 0 15px rgba(0, 210, 255, 0.05);
+        }
+        .neon-input {
+            background-color: rgba(3, 11, 30, 0.8);
+            border: 1px solid rgba(0, 210, 255, 0.25);
+            transition: all 0.3s ease;
+            font-size: 16px !important; /* Evita el zoom en iOS */
+        }
+        .neon-input:focus {
+            border-color: #00d2ff;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+            outline: none;
+        }
+        .neon-btn {
+            background: linear-gradient(90deg, #00d2ff 0%, #0072ff 100%);
+            box-shadow: 0 4px 20px rgba(0, 114, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .neon-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<!-- Quitamos min-h-screen del body y lo manejamos con flex-col y flex-grow -->
+<body class="text-white selection:bg-neonBlue selection:text-black">
+
+    <!-- Modal de Alerta / Éxito -->
+    <div id="customModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cardNavy border border-borderNavy rounded-2xl p-6 max-w-sm w-full shadow-neon text-center">
+            <div id="modalIcon" class="text-4xl mb-3 text-neonBlue"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 id="modalTitle" class="text-xl font-bold mb-2 text-white">¡Éxito!</h3>
+            <p id="modalMessage" class="text-gray-300 text-sm mb-6">Registro guardado correctamente.</p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-neonBlue text-deepNavy font-bold rounded-xl">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="w-full border-b border-borderNavy bg-deepNavy py-3 px-4 sm:px-6 shadow-md flex-shrink-0">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xs sm:text-base font-extrabold text-white flex items-center">
+                <i class="fa-solid fa-chart-line text-cyan-400 mr-2"></i>Evolución Financiera
+            </h1>
+            <span class="px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-semibold bg-neonBlue/10 text-cyan-400 border border-cyan-500/30">Evento Privado</span>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal: Quitamos items-center/justify-center y usamos py-8 -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 lg:gap-12">
+        
+        <!-- Foto / Banner del Evento -->
+        <div class="w-full lg:w-1/2 flex justify-center">
+            <div class="w-full max-w-md neon-card rounded-3xl p-3 sm:p-4 overflow-hidden relative">
+                <!-- Altura controlada: 224px en móvil, 480px en PC -->
+                <div class="w-full h-56 sm:h-[480px] rounded-2xl overflow-hidden relative border border-borderNavy">
+                    <img src="https://lh3.googleusercontent.com/d/1rtoZfuH3YVBCn1L1JRhp5PYI7VhkUz0h=s1000" 
+                         onerror="this.src='https://placehold.co/600x1000/030b1e/00d2ff?text=Evolucion+Financiera'"
+                         alt="Evento" class="w-full h-full object-cover opacity-95">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de Registro -->
+        <div class="w-full lg:w-1/2 max-w-md neon-card rounded-3xl p-5 sm:p-8">
+            <div class="text-center mb-5 sm:mb-6">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[11px] font-semibold tracking-wider uppercase mb-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    PATIO PANORAMA • 12 NOVIEMBRE
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white">Registro de Asistencia</h2>
+                <p class="text-gray-400 text-xs sm:text-sm mt-1">Aparta tu cupo exclusivo completando tus datos.</p>
+            </div>
+
+            <form id="registrationForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user text-xs"></i> Nombre y Apellido
+                    </label>
+                    <input type="text" id="fullname" required placeholder="Ej. Carlos Mendoza" 
+                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-id-card text-xs"></i> Número de DNI
+                    </label>
+                    <input type="tel" id="dni" required maxlength="8" pattern="[0-9]{8}" placeholder="8 dígitos" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-phone text-xs"></i> Número de Celular
+                    </label>
+                    <input type="tel" id="phone" required placeholder="Ej. 987654321" maxlength="9"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                </div>
+                <button type="submit" id="submitBtn" 
+                        class="neon-btn w-full mt-2 py-3.5 px-4 rounded-xl text-deepNavy font-extrabold text-sm tracking-wide uppercase flex items-center justify-center gap-2">
+                    Registrar y Guardar
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 border-t border-borderNavy text-[11px] text-gray-500 bg-deepNavy flex-shrink-0">
+        Evolución Financiera • Evento Privado
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const fullname = document.getElementById('fullname').value.trim();
+            const dni = document.getElementById('dni').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+
+            if (dni.length !== 8) {
+                showModal('Atención', 'El número de DNI debe tener exactamente 8 dígitos.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...';
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Registrar y Guardar';
+                    document.getElementById('registrationForm').reset();
+                    if (response.status === "success") {
+                        showModal('¡Éxito!', 'Tus datos se registraron correctamente.');
+                    } else {
+                        showModal('Error', 'Hubo un problema al guardar.', 'warning');
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Registrar y Guardar';
+                    showModal('Error', 'No se pudo conectar con el servidor: ' + error.message, 'warning');
+                })
+                .registrarDatosPC({ fullname, dni, phone });
+        }
+
+        function showModal(title, message, type = 'success') {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            
+            const icon = document.getElementById('modalIcon');
+            if(type === 'warning') {
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-cyan-400"></i>';
+            }
+            
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() { 
+            document.getElementById('customModal').classList.add('hidden'); 
+        }
+    </script>
+</body>
+</html>
