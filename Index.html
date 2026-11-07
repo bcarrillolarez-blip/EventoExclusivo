@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-    <base target="_top"> <!-- VITAL PARA APPS SCRIPT -->
+    <base target="_top">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evolución Financiera - Registro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -24,17 +25,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Forzamos a que el HTML y el Body ocupen todo el alto disponible */
+        /* Forzar el fondo a cubrir toda la pantalla */
         html, body {
-            height: 100%;
+            min-height: 100vh;
             margin: 0;
             padding: 0;
-            background-color: #030b1e; /* Mismo color que deepNavy */
+            background-color: #030b1e;
         }
         body { 
             font-family: 'Inter', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            /* Usamos flex para que el footer se pegue abajo, pero SIN centrar el contenido verticalmente */
             display: flex;
             flex-direction: column;
         }
@@ -47,7 +47,7 @@
             background-color: rgba(3, 11, 30, 0.8);
             border: 1px solid rgba(0, 210, 255, 0.25);
             transition: all 0.3s ease;
-            font-size: 16px !important; /* Evita el zoom en iOS */
+            font-size: 16px !important;
         }
         .neon-input:focus {
             border-color: #00d2ff;
@@ -64,18 +64,8 @@
         }
     </style>
 </head>
-<!-- Quitamos min-h-screen del body y lo manejamos con flex-col y flex-grow -->
+<!-- Quitamos justify-between. Ahora el body es solo un contenedor flexible -->
 <body class="text-white selection:bg-neonBlue selection:text-black">
-
-    <!-- Modal de Alerta / Éxito -->
-    <div id="customModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-cardNavy border border-borderNavy rounded-2xl p-6 max-w-sm w-full shadow-neon text-center">
-            <div id="modalIcon" class="text-4xl mb-3 text-neonBlue"><i class="fa-solid fa-circle-check"></i></div>
-            <h3 id="modalTitle" class="text-xl font-bold mb-2 text-white">¡Éxito!</h3>
-            <p id="modalMessage" class="text-gray-300 text-sm mb-6">Registro guardado correctamente.</p>
-            <button onclick="closeModal()" class="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-neonBlue text-deepNavy font-bold rounded-xl">Aceptar</button>
-        </div>
-    </div>
 
     <!-- Header -->
     <header class="w-full border-b border-borderNavy bg-deepNavy py-3 px-4 sm:px-6 shadow-md flex-shrink-0">
@@ -87,13 +77,12 @@
         </div>
     </header>
 
-    <!-- Contenedor Principal: Quitamos items-center/justify-center y usamos py-8 -->
-    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 lg:gap-12">
+    <!-- Contenedor Principal: py-6 en móvil, items-start para alinear arriba -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-12 flex flex-col lg:flex-row items-start justify-center gap-6 lg:gap-12">
         
         <!-- Foto / Banner del Evento -->
         <div class="w-full lg:w-1/2 flex justify-center">
             <div class="w-full max-w-md neon-card rounded-3xl p-3 sm:p-4 overflow-hidden relative">
-                <!-- Altura controlada: 224px en móvil, 480px en PC -->
                 <div class="w-full h-56 sm:h-[480px] rounded-2xl overflow-hidden relative border border-borderNavy">
                     <img src="https://lh3.googleusercontent.com/d/1rtoZfuH3YVBCn1L1JRhp5PYI7VhkUz0h=s1000" 
                          onerror="this.src='https://placehold.co/600x1000/030b1e/00d2ff?text=Evolucion+Financiera'"
@@ -147,7 +136,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="w-full text-center py-4 border-t border-borderNavy text-[11px] text-gray-500 bg-deepNavy flex-shrink-0">
+    <footer class="w-full text-center py-4 border-t border-borderNavy text-[11px] text-gray-500 bg-deepNavy mt-auto flex-shrink-0">
         Evolución Financiera • Evento Privado
     </footer>
 
@@ -160,7 +149,7 @@
             const phone = document.getElementById('phone').value.trim();
 
             if (dni.length !== 8) {
-                showModal('Atención', 'El número de DNI debe tener exactamente 8 dígitos.', 'warning');
+                alert('El número de DNI debe tener exactamente 8 dígitos.');
                 return;
             }
 
@@ -168,42 +157,21 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...';
 
+            // ATENCIÓN: En GitHub Pages esto dará error.
+            // Esta función solo funciona en el enlace de Google Apps Script (/exec)
             google.script.run
                 .withSuccessHandler(function(response) {
                     btn.disabled = false;
                     btn.innerHTML = 'Registrar y Guardar';
                     document.getElementById('registrationForm').reset();
-                    if (response.status === "success") {
-                        showModal('¡Éxito!', 'Tus datos se registraron correctamente.');
-                    } else {
-                        showModal('Error', 'Hubo un problema al guardar.', 'warning');
-                    }
+                    alert('¡Éxito! Tus datos se registraron correctamente.');
                 })
                 .withFailureHandler(function(error) {
                     btn.disabled = false;
                     btn.innerHTML = 'Registrar y Guardar';
-                    showModal('Error', 'No se pudo conectar con el servidor: ' + error.message, 'warning');
+                    alert('Error: Debes abrir esta página desde el enlace de Google Apps Script para guardar datos.');
                 })
                 .registrarDatosPC({ fullname, dni, phone });
-        }
-
-        function showModal(title, message, type = 'success') {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = message;
-            
-            const icon = document.getElementById('modalIcon');
-            if(type === 'warning') {
-                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
-            } else {
-                icon.innerHTML = '<i class="fa-solid fa-circle-check text-cyan-400"></i>';
-            }
-             
-            
-            document.getElementById('customModal').classList.remove('hidden');
-        }
-
-        function closeModal() { 
-            document.getElementById('customModal').classList.add('hidden'); 
         }
     </script>
 </body>
