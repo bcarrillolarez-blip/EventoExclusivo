@@ -17,9 +17,7 @@
                         cardNavy: '#0a1931',
                         borderNavy: '#1b3a6b'
                     },
-                    boxShadow: { 
-                        'neon': '0 0 25px rgba(0, 210, 255, 0.3)' 
-                    }
+                    boxShadow: { 'neon': '0 0 25px rgba(0, 210, 255, 0.3)' }
                 }
             }
         }
@@ -27,49 +25,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Fondo cubriendo toda la pantalla */
-        html, body {
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            background-color: #030b1e;
-        }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-            display: flex;
-            flex-direction: column;
-        }
+        html, body { min-height: 100vh; margin: 0; padding: 0; background-color: #030b1e; }
+        body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
         .neon-card {
             background: linear-gradient(145deg, rgba(10, 25, 49, 0.9), rgba(3, 11, 30, 0.95));
             border: 1px solid rgba(0, 210, 255, 0.25);
             box-shadow: 0 0 25px rgba(0, 210, 255, 0.15), inset 0 0 15px rgba(0, 210, 255, 0.05);
         }
         .neon-input {
-            background-color: rgba(3, 11, 30, 0.8);
-            border: 1px solid rgba(0, 210, 255, 0.25);
-            transition: all 0.3s ease;
-            font-size: 16px !important; /* Evita el zoom automático en iPhones */
+            background-color: rgba(3, 11, 30, 0.8); border: 1px solid rgba(0, 210, 255, 0.25);
+            transition: all 0.3s ease; font-size: 16px !important;
         }
-        .neon-input:focus {
-            border-color: #00d2ff;
-            box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
-            outline: none;
-        }
+        .neon-input:focus { border-color: #00d2ff; box-shadow: 0 0 12px rgba(0, 210, 255, 0.4); outline: none; }
         .neon-btn {
             background: linear-gradient(90deg, #00d2ff 0%, #0072ff 100%);
-            box-shadow: 0 4px 20px rgba(0, 114, 255, 0.4);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 114, 255, 0.4); transition: all 0.3s ease;
         }
-        .neon-btn:active {
-            transform: scale(0.98);
-        }
+        .neon-btn:active { transform: scale(0.98); }
+        
+        /* Animación para el mensaje de éxito */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="text-white selection:bg-neonBlue selection:text-black">
+<body class="text-white">
 
-    <!-- Header -->
-    <header class="w-full border-b border-borderNavy bg-deepNavy py-3 px-4 sm:px-6 shadow-md flex-shrink-0">
+    <header class="w-full border-b border-borderNavy bg-deepNavy py-3 px-4 shadow-md flex-shrink-0">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-xs sm:text-base font-extrabold text-white flex items-center">
                 <i class="fa-solid fa-chart-line text-cyan-400 mr-2"></i>Evolución Financiera
@@ -78,40 +59,30 @@
         </div>
     </header>
 
-    <!-- Contenedor Principal: AHORA TOTALMENTE CENTRADO (items-center justify-center) -->
-    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-12 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 py-6 lg:py-12 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
         
-        <!-- Foto / Banner del Evento -->
         <div class="w-full lg:w-1/2 flex justify-center">
             <div class="w-full max-w-md neon-card rounded-3xl p-3 sm:p-4 overflow-hidden relative">
                 <div class="w-full h-56 sm:h-[480px] rounded-2xl overflow-hidden relative border border-borderNavy">
-                    
-                    <!-- IMAGEN PARA MÓVIL (Vertical) -->
-                    <img src="https://lh3.googleusercontent.com/d/1rtoZfuH3YVBCn1L1JRhp5PYI7VhkUz0h=s1000" 
-                         alt="Evento Móvil" 
-                         class="w-full h-full object-cover opacity-95 block lg:hidden">
-                    
-                    <!-- IMAGEN PARA PC (Horizontal enviada por ti) -->
-                    <img src="https://lh3.googleusercontent.com/d/1KOvxEDuDDXreR_kZtmC4bHOgMQgh_zds=s1000" 
-                         onerror="this.src='https://placehold.co/600x1000/030b1e/00d2ff?text=Imagen+PC'"
-                         alt="Evento PC" 
-                         class="w-full h-full object-cover opacity-95 hidden lg:block">
-
-                    <!-- Degradado inferior de la imagen -->
+                    <img src="https://lh3.googleusercontent.com/d/1rtoZfuH3YVBCn1L1JRhp5PYI7VhkUz0h=s1000" alt="Evento Móvil" class="w-full h-full object-cover opacity-95 block lg:hidden">
+                    <img src="https://lh3.googleusercontent.com/d/1KOvxEDuDDXreR_kZtmC4bHOgMQgh_zds=s1000" alt="Evento PC" class="w-full h-full object-cover opacity-95 hidden lg:block">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Formulario de Registro -->
         <div class="w-full lg:w-1/2 max-w-md neon-card rounded-3xl p-5 sm:p-8">
             <div class="text-center mb-5 sm:mb-6">
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[11px] font-semibold tracking-wider uppercase mb-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                    PATIO PANORAMA • 12 NOVIEMBRE
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> PATIO PANORAMA • 12 NOVIEMBRE
                 </div>
                 <h2 class="text-xl sm:text-2xl font-extrabold text-white">Registro de Asistencia</h2>
                 <p class="text-gray-400 text-xs sm:text-sm mt-1">Aparta tu cupo exclusivo completando tus datos.</p>
+            </div>
+
+            <!-- Mensaje de Éxito (Oculto por defecto) -->
+            <div id="successMessage" class="hidden mb-4 bg-green-500/20 border border-green-500 text-green-300 px-4 py-3 rounded-xl text-sm text-center animate-fade-in">
+                <i class="fa-solid fa-circle-check mr-1"></i> ¡Registro guardado exitosamente!
             </div>
 
             <form id="registrationForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
@@ -119,39 +90,31 @@
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-user text-xs"></i> Nombre y Apellido
                     </label>
-                    <input type="text" id="fullname" required placeholder="Ej. Carlos Mendoza" 
-                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                    <input type="text" id="fullname" required placeholder="Ej. Carlos Mendoza" class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-id-card text-xs"></i> Número de DNI
                     </label>
-                    <input type="tel" id="dni" required maxlength="8" pattern="[0-9]{8}" placeholder="8 dígitos" 
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
-                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                    <input type="tel" id="dni" required maxlength="8" pattern="[0-9]{8}" placeholder="8 dígitos" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-phone text-xs"></i> Número de Celular
                     </label>
-                    <input type="tel" id="phone" required placeholder="Ej. 987654321" maxlength="9"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
-                           class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                    <input type="tel" id="phone" required placeholder="Ej. 987654321" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
                 </div>
-                <button type="submit" id="submitBtn" 
-                        class="neon-btn w-full mt-2 py-3.5 px-4 rounded-xl text-deepNavy font-extrabold text-sm tracking-wide uppercase flex items-center justify-center gap-2">
+                <button type="submit" id="submitBtn" class="neon-btn w-full mt-2 py-3.5 px-4 rounded-xl text-deepNavy font-extrabold text-sm tracking-wide uppercase flex items-center justify-center gap-2">
                     Registrar y Guardar
                 </button>
             </form>
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="w-full text-center py-4 border-t border-borderNavy text-[11px] text-gray-500 bg-deepNavy mt-auto flex-shrink-0">
         Evolución Financiera • Evento Privado
     </footer>
 
-    <!-- Scripts -->
     <script>
         function handleFormSubmit(event) {
             event.preventDefault();
@@ -165,24 +128,35 @@
             }
 
             const btn = document.getElementById('submitBtn');
+            const successMsg = document.getElementById('successMessage');
+            
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...';
+            successMsg.classList.add('hidden');
 
-            // ATENCIÓN: Esta función solo guardará datos si abres la página desde Google Apps Script (/exec)
-            // En GitHub Pages mostrará un error, pero el diseño funcionará perfecto.
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    btn.disabled = false;
-                    btn.innerHTML = 'Registrar y Guardar';
-                    document.getElementById('registrationForm').reset();
-                    alert('¡Éxito! Tus datos se registraron correctamente.');
-                })
-                .withFailureHandler(function(error) {
-                    btn.disabled = false;
-                    btn.innerHTML = 'Registrar y Guardar';
-                    alert('Aviso: Estás viendo el diseño en GitHub. Para guardar datos reales, abre el enlace de Google Apps Script (/exec).');
-                })
-                .registrarDatosPC({ fullname, dni, phone });
+            const nuevoRegistro = {
+                fecha: new Date().toLocaleString(),
+                nombre: fullname,
+                dni: dni,
+                celular: phone
+            };
+
+            // Guardar en el navegador
+            setTimeout(() => {
+                let registros = JSON.parse(localStorage.getItem('asistentes')) || [];
+                registros.unshift(nuevoRegistro);
+                localStorage.setItem('asistentes', JSON.stringify(registros));
+
+                // Mostrar mensaje de éxito sin redirigir
+                successMsg.classList.remove('hidden');
+                document.getElementById('registrationForm').reset();
+                
+                btn.disabled = false;
+                btn.innerHTML = 'Registrar y Guardar';
+
+                // Ocultar el mensaje después de 4 segundos
+                setTimeout(() => { successMsg.classList.add('hidden'); }, 4000);
+            }, 600);
         }
     </script>
 </body>
