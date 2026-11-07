@@ -36,7 +36,7 @@
         </div>
 
         <div class="mb-4">
-            <input type="text" id="searchInput" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por nombre o DNI..." class="w-full bg-[#030b1e] border border-[#1b3a6b] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#00d2ff]">
+            <input type="text" id="searchInput" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por nombre, DNI o quién lo invitó..." class="w-full bg-[#030b1e] border border-[#1b3a6b] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#00d2ff]">
         </div>
 
         <div class="neon-card rounded-xl overflow-hidden">
@@ -48,10 +48,11 @@
                             <th class="px-4 py-3">Nombre</th>
                             <th class="px-4 py-3">DNI</th>
                             <th class="px-4 py-3">Celular</th>
+                            <th class="px-4 py-3">Invitado por</th>
                         </tr>
                     </thead>
                     <tbody id="tablaBody">
-                        <tr><td colspan="4" class="text-center py-6 text-gray-500">Cargando datos desde la nube...</td></tr>
+                        <tr><td colspan="5" class="text-center py-6 text-gray-500">Cargando datos desde la nube...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -64,7 +65,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // La misma configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyD0iSjTHn0tYsqE92EGFz7O9Tnkb9qayJA",
             authDomain: "evento-financiero-6439d.firebaseapp.com",
@@ -111,7 +111,6 @@
 
         async function cargarDatos() {
             try {
-                // Ordenamos por fecha descendente (los más nuevos primero)
                 const q = query(collection(db, "asistentes"), orderBy("fecha", "desc"));
                 const querySnapshot = await getDocs(q);
                 
@@ -124,15 +123,16 @@
                     }
                     asistentesGlobal.push({
                         fecha: fechaStr,
-                        nombre: data.nombre,
-                        dni: data.dni,
-                        celular: data.celular
+                        nombre: data.nombre || '',
+                        dni: data.dni || '',
+                        celular: data.celular || '',
+                        invitado_por: data.invitado_por || 'N/D'
                     });
                 });
                 renderTabla(asistentesGlobal);
             } catch (error) {
                 console.error("Error al cargar: ", error);
-                document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500">Error al conectar con la base de datos. Revisa las reglas de Firestore.</td></tr>';
+                document.getElementById('tablaBody').innerHTML = '<tr><td colspan="5" class="text-center py-6 text-red-500">Error al conectar con la base de datos. Revisa las reglas de Firestore.</td></tr>';
             }
         }
 
@@ -142,7 +142,7 @@
             document.getElementById('totalRegistros').innerText = `Total registrados: ${data.length}`;
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay registros aún.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-500">No hay registros aún.</td></tr>';
                 return;
             }
 
@@ -154,6 +154,7 @@
                     <td class="px-4 py-3 font-semibold text-white">${row.nombre}</td>
                     <td class="px-4 py-3 font-mono">${row.dni}</td>
                     <td class="px-4 py-3">${row.celular}</td>
+                    <td class="px-4 py-3 text-cyan-300 font-medium">${row.invitado_por}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -162,7 +163,9 @@
         window.filtrarTabla = function() {
             const filtro = document.getElementById('searchInput').value.toLowerCase();
             const filtrados = asistentesGlobal.filter(row => 
-                row.nombre.toLowerCase().includes(filtro) || row.dni.includes(filtro)
+                row.nombre.toLowerCase().includes(filtro) || 
+                row.dni.includes(filtro) || 
+                row.invitado_por.toLowerCase().includes(filtro)
             );
             renderTabla(filtrados);
         }

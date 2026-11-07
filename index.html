@@ -70,6 +70,10 @@
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-phone text-xs"></i> Número de Celular</label>
                     <input type="tel" id="phone" required placeholder="Ej. 987654321" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
                 </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-cyan-400 mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-xs"></i> Invitado por (Líder / Socio)</label>
+                    <input type="text" id="invitadoPor" required placeholder="Ej. Nombre del líder o socio" class="neon-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500">
+                </div>
                 <button type="submit" id="submitBtn" class="neon-btn w-full mt-2 py-3.5 px-4 rounded-xl text-deepNavy font-extrabold text-sm tracking-wide uppercase flex items-center justify-center gap-2">
                     Registrar y Guardar
                 </button>
@@ -105,6 +109,7 @@
             const fullname = document.getElementById('fullname').value.trim();
             const dni = document.getElementById('dni').value.trim();
             const phone = document.getElementById('phone').value.trim();
+            const invitadoPor = document.getElementById('invitadoPor').value.trim();
 
             if (dni.length !== 8) {
                 alert('El número de DNI debe tener exactamente 8 dígitos.');
@@ -121,11 +126,12 @@
             errorMsg.classList.add('hidden');
 
             try {
-                // Guardar en Firestore
+                // Guardar en Firestore incluyendo el campo 'invitado_por'
                 await addDoc(collection(db, "asistentes"), {
                     nombre: fullname,
                     dni: dni,
                     celular: phone,
+                    invitado_por: invitadoPor,
                     fecha: serverTimestamp()
                 });
 
