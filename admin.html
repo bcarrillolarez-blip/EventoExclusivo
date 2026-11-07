@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backoffice - Registros</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neonBlue: '#00d2ff',
+                        deepNavy: '#030b1e',
+                        cardNavy: '#0a1931',
+                        borderNavy: '#1b3a6b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { min-height: 100vh; background-color: #030b1e; font-family: system-ui, sans-serif; }
+        .neon-card { background: #0a1931; border: 1px solid #1b3a6b; box-shadow: 0 0 15px rgba(0, 210, 255, 0.1); }
+    </style>
+</head>
+<body class="text-white p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Admin -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="text-neonBlue">📊</i> Backoffice - Asistentes
+            </h1>
+            <button onclick="recargarDatos()" class="bg-neonBlue text-deepNavy px-4 py-2 rounded-lg font-bold text-sm">
+                Actualizar
+            </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="mb-4">
+            <input type="text" id="searchInput" onkeyup="filtrarTabla()" 
+                   placeholder="🔍 Buscar por nombre o DNI..." 
+                   class="w-full bg-deepNavy border border-borderNavy rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neonBlue">
+        </div>
+
+        <!-- Tabla de Datos (Responsive) -->
+        <div class="neon-card rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <thead class="text-xs uppercase bg-deepNavy text-neonBlue border-b border-borderNavy">
+                        <tr>
+                            <th class="px-4 py-3">Fecha / Hora</th>
+                            <th class="px-4 py-3">Nombre</th>
+                            <th class="px-4 py-3">DNI</th>
+                            <th class="px-4 py-3">Celular</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-6 text-gray-500">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-2 text-right text-xs text-gray-500" id="totalRegistros"></div>
+    </div>
+
+    <script>
+        let asistentesGlobal = [];
+
+        // Cargar datos desde Apps Script
+        function cargarDatos() {
+            document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500">Cargando datos...</td></tr>';
+            
+            google.script.run
+                .withSuccessHandler(function(data) {
+                    asistentesGlobal = data;
+                    renderTabla(data);
+                })
+                .withFailureHandler(function(error) {
+                    document.getElementById('tablaBody').innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-500">Error al cargar datos.</td></tr>';
+                })
+                .obtenerAsistentes();
+        }
+
+        function renderTabla(data) {
+            const tbody = document.getElementById('tablaBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('totalRegistros').innerText = `Total registrados: ${data.length}`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay registros aún.</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-borderNavy hover:bg-white/5 transition';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-xs text-gray-400">${row.fecha}</td>
+                    <td class="px-4 py-3 font-semibold text-white">${row.nombre}</td>
+                    <td class="px-4 py-3 font-mono">${row.dni}</td>
+                    <td class="px-4 py-3">${row.celular}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filtro de búsqueda
+        function filtrarTabla() {
+            const filtro = document.getElementById('searchInput').value.toLowerCase();
+            const filtrados = asistentesGlobal.filter(row => 
+                row.nombre.toLowerCase().includes(filtro) || 
+                row.dni.includes(filtro)
+            );
+            renderTabla(filtrados);
+        }
+
+        function recargarDatos() {
+            cargarDatos();
+        }
+
+        // Iniciar
+        cargarDatos();
+    </script>
+</body>
+</html>
