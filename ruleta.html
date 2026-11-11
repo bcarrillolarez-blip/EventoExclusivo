@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo en Vivo - Evolución Financiera</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #070b14;
+            background-image: radial-gradient(circle at 50% 20%, #0b132b 0%, #070b14 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            padding: 20px 0;
+        }
+        .header-title h1 {
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0px 0px 20px rgba(0, 162, 255, 0.4);
+            font-size: 2.2rem;
+        }
+        .badge-evento {
+            background: rgba(0, 162, 255, 0.15);
+            color: #00d2ff;
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        /* Contenedor de la tómbola digital rápida */
+        .slot-container {
+            background: rgba(11, 19, 43, 0.9);
+            border: 3px solid #00a2ff;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 650px;
+            height: 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            box-shadow: 0 0 40px rgba(0, 162, 255, 0.4);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        #nombreSlot {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00d2ff;
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+            text-align: center;
+            padding: 0 20px;
+        }
+        .btn-sortear {
+            background: linear-gradient(180deg, #00bfff 0%, #0080ff 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            padding: 15px 50px;
+            border-radius: 50px;
+            box-shadow: 0 4px 25px rgba(0, 140, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+        .btn-sortear:hover {
+            background: linear-gradient(180deg, #33ccff 0%, #0066cc 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 140, 255, 0.8);
+        }
+        .btn-sortear:disabled {
+            background: #1e293b;
+            color: #64748b;
+            box-shadow: none;
+            transform: none;
+        }
+        .btn-ver-lista {
+            background: rgba(0, 162, 255, 0.1);
+            color: #00d2ff;
+            border: 1px solid rgba(0, 162, 255, 0.4);
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-ver-lista:hover {
+            background: rgba(0, 162, 255, 0.25);
+            color: #ffffff;
+            border-color: #00d2ff;
+        }
+
+        /* Popups / Modals */
+        .modal-backdrop-custom {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(7, 11, 20, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-backdrop-custom.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content-custom {
+            background: linear-gradient(135deg, #0b132b, #111d4a);
+            border: 2px solid #00d2ff;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 60px rgba(0, 162, 255, 0.6);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-backdrop-custom.show .modal-content-custom {
+            transform: scale(1);
+        }
+        .lista-scroll {
+            max-height: 250px;
+            overflow-y: auto;
+            text-align: left;
+            background: rgba(7, 11, 20, 0.6);
+            border: 1px solid rgba(0, 162, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .item-participante {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-center header-title container pt-3">
+        <span class="badge-evento mb-2 d-inline-block">📊 EVOLUCIÓN FINANCIERA • SORTEO EN VIVO</span>
+        <h1 class="mb-1">Gran Sorteo en Vivo</h1>
+        <div class="d-flex justify-content-center align-items: center; gap: 15px; margin-top: 10px;">
+            <p class="text-secondary mb-0" id="estadoConexion" style="font-size: 0.9rem;">Conectando a base de datos...</p>
+            <button class="btn btn-sm btn-ver-lista rounded-pill px-3 py-1" onclick="abrirLista()" id="btnVerLista" style="display:none;">
+                📋 Ver Participantes (<span id="contadorParticipantes">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA TÓMBOLA DIGITAL (NOMBRES RÁPIDOS) -->
+    <div class="slot-container">
+        <div id="nombreSlot">¡Listo para sortear!</div>
+    </div>
+
+    <!-- BOTÓN DE INICIAR SORTEO -->
+    <div class="text-center container pb-5">
+        <button class="btn btn-sortear" onclick="iniciarSorteo()" id="btnSortear" disabled>
+            🎲 ¡INICIAR SORTEO!
+        </button>
+    </div>
+
+    <!-- POPUP MODAL: LISTA DE PARTICIPANTES -->
+    <div id="modalLista" class="modal-backdrop-custom">
+        <div class="modal-content-custom">
+            <h3 class="text-info mb-2 fw-bold">📋 Listado de Asistentes</h3>
+            <p class="text-secondary small mb-1">Participantes activos en la base de datos (Excluyendo invitados de Héctor Guerrero)</p>
+            
+            <div class="lista-scroll" id="contenedorListaModal">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <button class="btn btn-outline-light px-4 py-2 rounded-pill fw-bold" onclick="cerrarLista()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- POPUP MODAL: GANADOR -->
+    <div id="modalGanador" class="modal-backdrop-custom">
+        <div class="modal-content-custom">
+            <h3 class="text-info mb-2 fw-bold" style="letter-spacing: 1.5px;">🎉 ¡FELICIDADES! 🎉</h3>
+            <h1 id="nombreGanadorPopup" class="fw-bold text-white mb-3 display-5" style="text-shadow: 0 0 20px rgba(0,162,255,0.9);">---</h1>
+            <h4 class="text-warning fw-bold mb-4" style="text-shadow: 0 0 10px rgba(255,193,7,0.6);">🏆 ¡Eres el ganador de 300 USDT! 🏆</h4>
+            <button class="btn btn-primary px-4 py-2 rounded-pill fw-bold" onclick="cerrarGanador()">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- LÓGICA DE FIREBASE Y SORTEO RÁPIDO -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            projectId: "evento-financiero-6439d",
+            authDomain: "evento-financiero-6439d.firebaseapp.com",
+            storageBucket: "evento-financiero-6439d.appspot.com"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let participantes = [];
+
+        async function cargarClientesDesdeFirebase() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "asistentes"));
+                let listaCargada = [];
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let nombre = data.nombre || "Sin Nombre";
+                    let invitadoPor = (data.invitado_por || "").toLowerCase();
+
+                    // FILTRO: Omitir si "invitado_por" corresponde a Héctor Guerrero
+                    if (!invitadoPor.includes("hector guerrero") && !invitadoPor.includes("hector")) {
+                        listaCargada.push(nombre);
+                    }
+                });
+
+                participantes = listaCargada;
+
+                if (participantes.length > 0) {
+                    document.getElementById("estadoConexion").innerText = `${participantes.length} asistentes listos`;
+                    document.getElementById("contadorParticipantes").innerText = participantes.length;
+                    document.getElementById("btnVerLista").style.display = "inline-block";
+                    
+                    const contenedorModal = document.getElementById("contenedorListaModal");
+                    contenedorModal.innerHTML = "";
+                    participantes.forEach((p, index) => {
+                        contenedorModal.innerHTML += `<div class="item-participante"><b>${index + 1}.</b> ${p}</div>`;
+                    });
+
+                    document.getElementById("btnSortear").disabled = false;
+                } else {
+                    document.getElementById("estadoConexion").innerText = "No se encontraron asistentes válidos.";
+                }
+
+            } catch (error) {
+                console.error("Error de Firebase:", error);
+                document.getElementById("estadoConexion").innerText = "Error al conectar con Firestore.";
+            }
+        }
+
+        window.abrirLista = function() {
+            document.getElementById("modalLista").classList.add("show");
+        }
+
+        window.cerrarLista = function() {
+            document.getElementById("modalLista").classList.remove("show");
+        }
+
+        window.cerrarGanador = function() {
+            document.getElementById("modalGanador").classList.remove("show");
+        }
+
+        window.iniciarSorteo = async function() {
+            if (participantes.length === 0) return;
+
+            const btn = document.getElementById("btnSortear");
+            btn.disabled = true;
+
+            const slotElement = document.getElementById("nombreSlot");
+            let duracionTotal = 4000; // 4 segundos de animación rápida
+            let intervalo = 80; // Velocidad de cambio de nombres
+            let tiempoTranscurrido = 0;
+
+            // Animación de nombres pasando rápido
+            let animacion = setInterval(() => {
+                let indiceAleatorio = Math.floor(Math.random() * participantes.length);
+                slotElement.innerText = participantes[indiceAleatorio];
+                tiempoTranscurrido += intervalo;
+
+                if (tiempoTranscurrido >= duracionTotal) {
+                    clearInterval(animacion);
+
+                    // Seleccionar ganador final de forma definitiva
+                    const indiceGanador = Math.floor(Math.random() * participantes.length);
+                    const ganador = participantes[indiceGanador];
+
+                    slotElement.innerText = "✨ " + ganador + " ✨";
+
+                    // Mostrar popup del ganador
+                    setTimeout(async () => {
+                        document.getElementById("nombreGanadorPopup").innerText = ganador;
+                        document.getElementById("modalGanador").classList.add("show");
+                        btn.disabled = false;
+
+                        try {
+                            await addDoc(collection(db, "ganadores"), {
+                                nombreGanador: ganador,
+                                premio: "300 USDT",
+                                fecha: new Date().toISOString()
+                            });
+                        } catch (e) {
+                            console.error("No se pudo guardar el ganador en Firestore:", e);
+                        }
+                    }, 600);
+                }
+            }, intervalo);
+        }
+
+        window.onload = cargarClientesDesdeFirebase;
+    </script>
+</body>
+</html>
