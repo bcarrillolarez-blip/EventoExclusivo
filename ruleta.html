@@ -150,7 +150,7 @@
     <div class="text-center header-title container pt-3">
         <span class="badge-evento mb-2 d-inline-block">📊 EVOLUCIÓN FINANCIERA • SORTEO EN VIVO</span>
         <h1 class="mb-1">Gran Sorteo en Vivo</h1>
-        <div class="d-flex justify-content-center align-items: center; gap: 15px; margin-top: 10px;">
+        <div class="d-flex justify-content-center align-items: center gap-15; margin-top: 10px;">
             <p class="text-secondary mb-0" id="estadoConexion" style="font-size: 0.9rem;">Conectando a base de datos...</p>
             <button class="btn btn-sm btn-ver-lista rounded-pill px-3 py-1" onclick="abrirLista()" id="btnVerLista" style="display:none;">
                 📋 Ver Presentes (<span id="contadorParticipantes">0</span>)
@@ -187,12 +187,12 @@
         <div class="modal-content-custom">
             <h3 class="text-info mb-2 fw-bold" style="letter-spacing: 1.5px;">🎉 ¡FELICIDADES! 🎉</h3>
             <h1 id="nombreGanadorPopup" class="fw-bold text-white mb-3 display-5" style="text-shadow: 0 0 20px rgba(0,162,255,0.9);">---</h1>
-            <h4 class="text-warning fw-bold mb-4" style="text-shadow: 0 0 10px rgba(255,193,7,0.6);">🏆 ¡Eres el ganador de 300 USDT! 🏆</h4>
+            <h4 class="text-warning fw-bold mb-4" style="text-shadow: 0 0 10px rgba(255,193,7,0.6);">🏆 ¡Eres el ganador! 🏆</h4>
             <button class="btn btn-primary px-4 py-2 rounded-pill fw-bold" onclick="cerrarGanador()">Aceptar</button>
         </div>
     </div>
 
-    <!-- LÓGICA DE FIREBASE Y SORTEO -->
+    <!-- LÓGICA DE FIREBASE Y SORTEO CON AUDIO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -207,6 +207,49 @@
         const db = getFirestore(app);
 
         let participantes = [];
+        let audioCtx = null;
+
+        // Inicializar contexto de audio al primer clic del usuario
+        function inicializarAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Efecto de Tic-Tac de Ruleta
+        function reproducirTic() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        // Efecto de Fanfarria de Victoria
+        function reproducirGanadorSonido() {
+            if (!audioCtx) return;
+            const notas = [523.25, 659.25, 783.99, 1046.50]; // Acorde alegre Do-Mi-Sol-Do
+            notas.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (index * 0.12));
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + (index * 0.12));
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + (index * 0.12) + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (index * 0.12) + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + (index * 0.12));
+                osc.stop(audioCtx.currentTime + (index * 0.12) + 0.4);
+            });
+        }
 
         async function cargarClientesDesdeFirebase() {
             try {
@@ -217,9 +260,8 @@
                     const data = doc.data();
                     let nombre = data.nombre || "Sin Nombre";
                     let invitadoPor = (data.invitado_por || "").toLowerCase();
-                    let asistencia = data.asistencia === true; // ÚNICAMENTE los que tienen el check activo
+                    let asistencia = data.asistencia === true;
 
-                    // Filtros de exclusión (Héctor Guerrero y Yeison)
                     const esDeHector = invitadoPor.includes("hector guerrero") || invitadoPor.includes("hector");
                     const esDeYeison = invitadoPor.includes("yeison");
 
@@ -266,18 +308,20 @@
 
         window.iniciarSorteo = async function() {
             if (participantes.length === 0) return;
+            inicializarAudio();
 
             const btn = document.getElementById("btnSortear");
             btn.disabled = true;
 
             const slotElement = document.getElementById("nombreSlot");
             let duracionTotal = 4000; 
-            let intervalo = 80; 
+            let intervalo = 70; 
             let tiempoTranscurrido = 0;
 
             let animacion = setInterval(() => {
                 let indiceAleatorio = Math.floor(Math.random() * participantes.length);
                 slotElement.innerText = participantes[indiceAleatorio];
+                reproducirTic(); // Reproduce el sonido de ruleta en cada cambio
                 tiempoTranscurrido += intervalo;
 
                 if (tiempoTranscurrido >= duracionTotal) {
@@ -287,6 +331,7 @@
                     const ganador = participantes[indiceGanador];
 
                     slotElement.innerText = "✨ " + ganador + " ✨";
+                    reproducirGanadorSonido(); // Reproduce la fanfarria de victoria
 
                     setTimeout(async () => {
                         document.getElementById("nombreGanadorPopup").innerText = ganador;
@@ -296,7 +341,6 @@
                         try {
                             await addDoc(collection(db, "ganadores"), {
                                 nombreGanador: ganador,
-                                premio: "300 USDT",
                                 fecha: new Date().toISOString()
                             });
                         } catch (e) {
