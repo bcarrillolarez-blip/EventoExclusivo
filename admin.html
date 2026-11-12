@@ -11,6 +11,7 @@
         .neon-card { background: #0a1931; border: 1px solid #1b3a6b; box-shadow: 0 0 15px rgba(0, 210, 255, 0.1); }
         .neon-input { background-color: #030b1e; border: 1px solid #1b3a6b; }
         .neon-input:focus { outline: none; border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
+        .form-check-input { width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: #00d2ff; }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
@@ -49,10 +50,11 @@
                             <th class="px-4 py-3">DNI</th>
                             <th class="px-4 py-3">Celular</th>
                             <th class="px-4 py-3">Invitado por</th>
+                            <th class="px-4 py-3 text-center">Asistencia (Sorteo)</th>
                         </tr>
                     </thead>
                     <tbody id="tablaBody">
-                        <tr><td colspan="5" class="text-center py-6 text-gray-500">Cargando datos desde la nube...</td></tr>
+                        <tr><td colspan="6" class="text-center py-6 text-gray-500">Cargando datos desde la nube...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -63,7 +65,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD0iSjTHn0tYsqE92EGFz7O9Tnkb9qayJA",
@@ -115,24 +117,26 @@
                 const querySnapshot = await getDocs(q);
                 
                 asistentesGlobal = [];
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+                querySnapshot.forEach((documento) => {
+                    const data = documento.data();
                     let fechaStr = 'Reciente';
                     if(data.fecha) {
                         fechaStr = data.fecha.toDate().toLocaleString();
                     }
                     asistentesGlobal.push({
+                        id: documento.id,
                         fecha: fechaStr,
                         nombre: data.nombre || '',
                         dni: data.dni || '',
                         celular: data.celular || '',
-                        invitado_por: data.invitado_por || 'N/D'
+                        invitado_por: data.invitado_por || 'N/D',
+                        asistencia: data.asistencia === true
                     });
                 });
                 renderTabla(asistentesGlobal);
             } catch (error) {
                 console.error("Error al cargar: ", error);
-                document.getElementById('tablaBody').innerHTML = '<tr><td colspan="5" class="text-center py-6 text-red-500">Error al conectar con la base de datos. Revisa las reglas de Firestore.</td></tr>';
+                document.getElementById('tablaBody').innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-500">Error al conectar con la base de datos. Revisa las reglas de Firestore.</td></tr>';
             }
         }
 
@@ -142,7 +146,7 @@
             document.getElementById('totalRegistros').innerText = `Total registrados: ${data.length}`;
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-500">No hay registros aún.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">No hay registros aún.</td></tr>';
                 return;
             }
 
@@ -155,8 +159,32 @@
                     <td class="px-4 py-3 font-mono">${row.dni}</td>
                     <td class="px-4 py-3">${row.celular}</td>
                     <td class="px-4 py-3 text-cyan-300 font-medium">${row.invitado_por}</td>
+                    <td class="px-4 py-3 text-center">
+                        <input type="checkbox" class="form-check-input check-asistencia" ${row.asistencia ? 'checked' : ''} data-id="${row.id}">
+                    </td>
                 `;
                 tbody.appendChild(tr);
+            });
+
+            // Sincronizar el cambio del checkbox en tiempo real con Firestore
+            document.querySelectorAll('.check-asistencia').forEach(checkbox => {
+                checkbox.addEventListener('change', async function() {
+                    const idDoc = this.getAttribute("data-id");
+                    const nuevoEstado = this.checked;
+
+                    try {
+                        const docRef = doc(db, "asistentes", idDoc);
+                        await updateDoc(docRef, {
+                            asistencia: nuevoEstado
+                        });
+                        let reg = asistentesGlobal.find(r => r.id === idDoc);
+                        if (reg) reg.asistencia = nuevoEstado;
+                    } catch (error) {
+                        console.error("Error al actualizar la asistencia en Firestore:", error);
+                        alert("No se pudo actualizar la asistencia. Revisa las reglas de seguridad de Firestore.");
+                        this.checked = !nuevoEstado; // Revierte el estado si ocurre un error
+                    }
+                });
             });
         }
 

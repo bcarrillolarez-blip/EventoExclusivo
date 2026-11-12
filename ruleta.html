@@ -36,7 +36,6 @@
             font-weight: 600;
             letter-spacing: 0.5px;
         }
-        /* Contenedor de la tómbola digital rápida */
         .slot-container {
             background: rgba(11, 19, 43, 0.9);
             border: 3px solid #00a2ff;
@@ -96,8 +95,6 @@
             color: #ffffff;
             border-color: #00d2ff;
         }
-
-        /* Popups / Modals */
         .modal-backdrop-custom {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -156,12 +153,12 @@
         <div class="d-flex justify-content-center align-items: center; gap: 15px; margin-top: 10px;">
             <p class="text-secondary mb-0" id="estadoConexion" style="font-size: 0.9rem;">Conectando a base de datos...</p>
             <button class="btn btn-sm btn-ver-lista rounded-pill px-3 py-1" onclick="abrirLista()" id="btnVerLista" style="display:none;">
-                📋 Ver Participantes (<span id="contadorParticipantes">0</span>)
+                📋 Ver Presentes (<span id="contadorParticipantes">0</span>)
             </button>
         </div>
     </div>
 
-    <!-- PANTALLA TÓMBOLA DIGITAL (NOMBRES RÁPIDOS) -->
+    <!-- PANTALLA TÓMBOLA DIGITAL -->
     <div class="slot-container">
         <div id="nombreSlot">¡Listo para sortear!</div>
     </div>
@@ -173,15 +170,13 @@
         </button>
     </div>
 
-    <!-- POPUP MODAL: LISTA DE PARTICIPANTES -->
+    <!-- POPUP MODAL: LISTA DE ASISTENTES PRESENTES -->
     <div id="modalLista" class="modal-backdrop-custom">
         <div class="modal-content-custom">
-            <h3 class="text-info mb-2 fw-bold">📋 Listado de Asistentes</h3>
-            <p class="text-secondary small mb-1">Participantes activos en la base de datos (Excluyendo invitados de Héctor Guerrero)</p>
+            <h3 class="text-info mb-2 fw-bold">📋 Asistentes Con Check Activo</h3>
+            <p class="text-secondary small mb-1">Participantes habilitados para este sorteo</p>
             
-            <div class="lista-scroll" id="contenedorListaModal">
-                <!-- Se llena dinámicamente -->
-            </div>
+            <div class="lista-scroll" id="contenedorListaModal"></div>
 
             <button class="btn btn-outline-light px-4 py-2 rounded-pill fw-bold" onclick="cerrarLista()">Cerrar</button>
         </div>
@@ -197,7 +192,7 @@
         </div>
     </div>
 
-    <!-- LÓGICA DE FIREBASE Y SORTEO RÁPIDO -->
+    <!-- LÓGICA DE FIREBASE Y SORTEO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -222,9 +217,13 @@
                     const data = doc.data();
                     let nombre = data.nombre || "Sin Nombre";
                     let invitadoPor = (data.invitado_por || "").toLowerCase();
+                    let asistencia = data.asistencia === true; // ÚNICAMENTE los que tienen el check activo
 
-                    // FILTRO: Omitir si "invitado_por" corresponde a Héctor Guerrero
-                    if (!invitadoPor.includes("hector guerrero") && !invitadoPor.includes("hector")) {
+                    // Filtros de exclusión (Héctor Guerrero y Yeison)
+                    const esDeHector = invitadoPor.includes("hector guerrero") || invitadoPor.includes("hector");
+                    const esDeYeison = invitadoPor.includes("yeison");
+
+                    if (asistencia && !esDeHector && !esDeYeison) {
                         listaCargada.push(nombre);
                     }
                 });
@@ -232,7 +231,7 @@
                 participantes = listaCargada;
 
                 if (participantes.length > 0) {
-                    document.getElementById("estadoConexion").innerText = `${participantes.length} asistentes listos`;
+                    document.getElementById("estadoConexion").innerText = `${participantes.length} asistentes presentes listos`;
                     document.getElementById("contadorParticipantes").innerText = participantes.length;
                     document.getElementById("btnVerLista").style.display = "inline-block";
                     
@@ -244,7 +243,7 @@
 
                     document.getElementById("btnSortear").disabled = false;
                 } else {
-                    document.getElementById("estadoConexion").innerText = "No se encontraron asistentes válidos.";
+                    document.getElementById("estadoConexion").innerText = "No hay asistentes con check de asistencia.";
                 }
 
             } catch (error) {
@@ -272,11 +271,10 @@
             btn.disabled = true;
 
             const slotElement = document.getElementById("nombreSlot");
-            let duracionTotal = 4000; // 4 segundos de animación rápida
-            let intervalo = 80; // Velocidad de cambio de nombres
+            let duracionTotal = 4000; 
+            let intervalo = 80; 
             let tiempoTranscurrido = 0;
 
-            // Animación de nombres pasando rápido
             let animacion = setInterval(() => {
                 let indiceAleatorio = Math.floor(Math.random() * participantes.length);
                 slotElement.innerText = participantes[indiceAleatorio];
@@ -285,13 +283,11 @@
                 if (tiempoTranscurrido >= duracionTotal) {
                     clearInterval(animacion);
 
-                    // Seleccionar ganador final de forma definitiva
                     const indiceGanador = Math.floor(Math.random() * participantes.length);
                     const ganador = participantes[indiceGanador];
 
                     slotElement.innerText = "✨ " + ganador + " ✨";
 
-                    // Mostrar popup del ganador
                     setTimeout(async () => {
                         document.getElementById("nombreGanadorPopup").innerText = ganador;
                         document.getElementById("modalGanador").classList.add("show");
