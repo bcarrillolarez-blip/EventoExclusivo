@@ -259,13 +259,15 @@
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     let nombre = data.nombre || "Sin Nombre";
+                    let nombreLower = nombre.toLowerCase();
                     let invitadoPor = (data.invitado_por || "").toLowerCase();
                     let asistencia = data.asistencia === true;
 
                     const esDeHector = invitadoPor.includes("hector guerrero") || invitadoPor.includes("hector");
                     const esDeYeison = invitadoPor.includes("yeison");
+                    const esJenifer = nombreLower.includes("jenifer");
 
-                    if (asistencia && !esDeHector && !esDeYeison) {
+                    if (asistencia && !esDeHector && !esDeYeison && !esJenifer) {
                         listaCargada.push(nombre);
                     }
                 });
